@@ -68,6 +68,7 @@ function findPairs(charArray) {
 
 				pair.letter = currCharacter;
 				pair.start = position;
+
 				pair.end = i;
 				pair.distance = i - position;
 				pairs.push(pair);
@@ -77,30 +78,41 @@ function findPairs(charArray) {
 		}
 		position++;
 	}
+	debugger;
 	pairs.sort(function(a,b) {
-		return b.distance - a.distance || a.start - b.start;
-	})
+		if (a.distance === b.distance) {
+			return a.start - b.start;
+		}
+		else {
+			return b.distance - a.distance;
+		}
+	});
 	console.log(pairs);
 	return pairs;
 }
 
+// THIS IS THE PART WHERE IT'S VERY SLOW
 
-
-function checkInnerPairs(pairs, pairsAll) {
+function checkInnerPairs(pairs) {
 	
 	for (var i = 0; i < pairs.length; i++) {
 		var targetStart = pairs[i].start;
 		var targetEnd = pairs[i].end;
-		var pairsCompare = pairs.filter(function(e) {
+		// var pairsCompare = pairs.filter(function(e) {
+		// 	return e.start > targetStart && e.end < targetEnd;
+		// });
+		var pairsCompare = _.findIndex(pairs, function(e) {
 			return e.start > targetStart && e.end < targetEnd;
 		});
+		debugger;
 
-		if (pairsCompare.length === 0) {
-			console.log(pairs[i]);
+		// if (pairsCompare.length === 0) {
+		if (pairsCompare === -1) {
 			return pairs[i];
 		}
 	}
 }
+
 
 function shiftCharacters(firstChar,lastChar,array) {
 	array.splice(firstChar,1);
@@ -117,6 +129,7 @@ function removeUnderscores(characters) {
 	}
 	return characters;
 }
+
 stringTest = 'ttvmswxjzdgzqxotby_lslonwqaipchgqdo_yz_fqdagixyrobdjtnl_jqzpptzfcdcjjcpjjnnvopmh';
 
 pairbot = new PairBot();
