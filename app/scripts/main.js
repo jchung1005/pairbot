@@ -11,7 +11,6 @@ var PairBot = function PairBot() {
 PairBot.prototype = {
 	prepare: function(string) {
 		var splitString = string.split('');
-		// newString = removeUnderscores(splitString);
 		return splitString;
 	},
 	restring: function(array) {
@@ -23,14 +22,15 @@ PairBot.prototype = {
 	},
 	returnPairs: function() {
 		var preparedString = this.prepare(this.string);
-		this.pairs = findPairs(preparedString);
+		this.pairs = findTargetPair(preparedString);
 	},
 	process: function() {
 		do  {
 			this.iteration++;
-			this.returnPairs();
 			var preparedString = this.prepare(this.string);
-			var targetPair = checkInnerPairs(this.pairs);
+			var pairs = findPairs(preparedString);
+
+			var targetPair = checkInnerPairs(pairs);
 			if (targetPair === undefined) {
 				console.log("all done!");
 				this.string = this.restring(removeUnderscores(preparedString));
@@ -38,13 +38,12 @@ PairBot.prototype = {
 			}
 			else {
 			var shiftedArray = shiftCharacters(targetPair.start,targetPair.end,preparedString);
-					
 			this.string = this.restring(shiftedArray);
 
 			// append iterations to document
 			document.getElementById('output').innerHTML += "<p>Iteration: "+this.iteration+", Output: "+this.string;
 			}
-		} while (this.pairs.length != 0);
+		} while (targetPair != undefined);
 
 		return this.string;
 	}
@@ -66,43 +65,41 @@ function findPairs(charArray) {
 		for (var i = 0; i < charArray.length; i++) {
 			while (currCharacter === charArray[i] && i > position) {
 				var pair = {};
+
 				pair.letter = currCharacter;
 				pair.start = position;
 				pair.end = i;
 				pair.distance = i - position;
 				pairs.push(pair);
+				// pairDistances.push(pair.distance);
 				break;
 			}
 		}
 		position++;
 	}
-	// sort by distance, largest first
 	pairs.sort(function(a,b) {
 		return b.distance - a.distance || a.start - b.start;
-	});
+	})
 	console.log(pairs);
 	return pairs;
 }
 
-function checkInnerPairs(pairs) {
-	for (var i = 0; i < pairs.length; i++) {
-		var innerPairs = [];
-		targetStart = pairs[0].start;
-		targetEnd = pairs[0].end;
 
-		if (pairs[i].end < targetEnd && pairs[i].start > targetStart) {
-			innerPairs.push(pairs[i]);
-		}
-		if (innerPairs.length > 0) {
-			pairs.shift();
-			i = 0;
-		}
-		else {
-			target = pairs[0];
+
+function checkInnerPairs(pairs, pairsAll) {
+	
+	for (var i = 0; i < pairs.length; i++) {
+		var targetStart = pairs[i].start;
+		var targetEnd = pairs[i].end;
+		var pairsCompare = pairs.filter(function(e) {
+			return e.start > targetStart && e.end < targetEnd;
+		});
+
+		if (pairsCompare.length === 0) {
+			console.log(pairs[i]);
+			return pairs[i];
 		}
 	}
-	console.log
-	return pairs[0];
 }
 
 function shiftCharacters(firstChar,lastChar,array) {
@@ -123,4 +120,7 @@ function removeUnderscores(characters) {
 stringTest = 'ttvmswxjzdgzqxotby_lslonwqaipchgqdo_yz_fqdagixyrobdjtnl_jqzpptzfcdcjjcpjjnnvopmh';
 
 pairbot = new PairBot();
+var start = performance.now();
 pairbot.process(this.string);
+var duration = performance.now() - start;
+console.log(duration);
