@@ -5,6 +5,7 @@ var PairBot = function PairBot() {
 	this.string = stringTest;
 	this.iteration = 0;
 	this.pairs = null;
+	this.existingPairs = null;
 
 };
 
@@ -28,9 +29,9 @@ PairBot.prototype = {
 		do  {
 			this.iteration++;
 			var preparedString = this.prepare(this.string);
-			var pairs = findPairs(preparedString);
-
-			var targetPair = checkInnerPairs(pairs);
+			this.pairs = findPairs(preparedString);
+			var targetPair = this.pairs[0];
+			// var targetPair = checkInnerPairs(pairs);
 			if (targetPair === undefined) {
 				console.log("all done!");
 				this.string = this.restring(removeUnderscores(preparedString));
@@ -47,39 +48,55 @@ PairBot.prototype = {
 
 		return this.string;
 	}
+};
+
+function checkInnerPairs(pairsCheck, pairsAll) {
+	for (var i = 0; i < pairsCheck.length; i++) {
+		var targetStart = pairsCheck[i].start;
+		var targetEnd = pairsCheck[i].end;
+		var pairsCompare = _.findIndex(pairsAll, function(e) {
+			return e.start > targetStart && e.end < targetEnd;
+		});
+		if (pairsCompare === -1) {
+			return;
+		}
+		else {
+			pairsCheck[i].hasInnerPair = true;
+		}
+	}
 }
 
 function findPairs(charArray) {
 	var pairs = [];
-	var uniqueCharacters = [];
+	var pairsToCheck = [];
 	var position = 0;
+	var stringLength = charArray.length;
+	var currCharacter;
+	while (position < stringLength) {
+		currCharacter = charArray[position];
 
-	// create a subset of all unique characters
-	for (var i = 0; i < charArray.length; i++) {
-		if (uniqueCharacters.indexOf(charArray[i]) === -1) {
-			uniqueCharacters.push(charArray[i]);
-		}
-	}
-	while (position < charArray.length) {
-		var currCharacter = charArray[position];
-		for (var i = 0; i < charArray.length; i++) {
+		for (var i = position; i < stringLength; i++) {
 			while (currCharacter === charArray[i] && i > position) {
 				var pair = {};
 
 				pair.letter = currCharacter;
 				pair.start = position;
-
 				pair.end = i;
 				pair.distance = i - position;
+				pair.hasInnerPair = null;
 				pairs.push(pair);
-				// pairDistances.push(pair.distance);
 				break;
 			}
+			pairsToCheck = _.filter(pairs, {'hasInnerPair':null});
+	
+			console.log(pairs);
+			checkInnerPairs(pairsToCheck,pairs);
+			
 		}
 		position++;
 	}
-	debugger;
-	pairs.sort(function(a,b) {
+
+	pairsToCheck.sort(function(a,b) {
 		if (a.distance === b.distance) {
 			return a.start - b.start;
 		}
@@ -87,31 +104,12 @@ function findPairs(charArray) {
 			return b.distance - a.distance;
 		}
 	});
-	console.log(pairs);
-	return pairs;
+	console.log(pairsToCheck[0]);
+	return pairsToCheck;
 }
 
-// THIS IS THE PART WHERE IT'S VERY SLOW
 
-function checkInnerPairs(pairs) {
-	
-	for (var i = 0; i < pairs.length; i++) {
-		var targetStart = pairs[i].start;
-		var targetEnd = pairs[i].end;
-		// var pairsCompare = pairs.filter(function(e) {
-		// 	return e.start > targetStart && e.end < targetEnd;
-		// });
-		var pairsCompare = _.findIndex(pairs, function(e) {
-			return e.start > targetStart && e.end < targetEnd;
-		});
-		debugger;
 
-		// if (pairsCompare.length === 0) {
-		if (pairsCompare === -1) {
-			return pairs[i];
-		}
-	}
-}
 
 
 function shiftCharacters(firstChar,lastChar,array) {
@@ -130,7 +128,7 @@ function removeUnderscores(characters) {
 	return characters;
 }
 
-stringTest = 'ttvmswxjzdgzqxotby_lslonwqaipchgqdo_yz_fqdagixyrobdjtnl_jqzpptzfcdcjjcpjjnnvopmh';
+stringTest = 'abacbcbefge';
 
 pairbot = new PairBot();
 var start = performance.now();
